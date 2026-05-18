@@ -5,6 +5,8 @@ const router = express.Router();
 const XLSX = require("xlsx");
 const quarterMiddleware = require("../middleware/quarterMiddleware");
 const auditLogger = require("../utils/auditLogger");
+const { sendEmail, buildGoalDeepLink } = require("../utils/notifications");
+const { readConfig, writeConfig } = require("../utils/configStore");
 const requireRole = require("../middleware/roleMiddleware");
 
 router.post("/create", authMiddleware, async (req, res) => {
@@ -70,8 +72,8 @@ router.post("/create", authMiddleware, async (req, res) => {
         }
     const newGoal = await pool.query(
       `INSERT INTO goals
-      (employee_id, title, description, thrust_area, uom_type, target_value, weightage)
-      VALUES ($1,$2,$3,$4,$5,$6,$7)
+      (employee_id, title, description, thrust_area, uom_type, target_value, weightage, created_at)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
       RETURNING *`,
       [
         employee_id,
@@ -267,7 +269,7 @@ router.put(
       await pool.query(
         `
         UPDATE goals
-        SET status='Pending Approval'
+        SET status='Pending Approval', submitted_at=NOW()
         WHERE employee_id=$1
         `,
         [employeeId]
@@ -281,6 +283,24 @@ router.put(
         old_value: "",
         new_value: "Pending Approval",
       });
+
+      // Notify managers via email + Teams webhook about the submission
+      try {
+        const managers = await pool.query(`SELECT email FROM users WHERE role='manager'`);
+        const link = buildGoalDeepLink(null, 'manager');
+        for (const m of managers.rows) {
+          sendEmail({
+            to: m.email,
+            subject: `Goals submitted by ${req.user.email}`,
+            text: `${req.user.email} submitted their goals. Review at ${link}`,
+            html: `<p>${req.user.email} submitted their goals.</p><p><a href="${link}">Open manager review</a></p>`,
+          }).catch(console.error);
+        }
+
+        // Teams support removed; skip Teams notification.
+      } catch (err) {
+        console.error('Notification dispatch failed', err);
+      }
 
       res.json({ message: "Goals Submitted" });
 
@@ -353,9 +373,26 @@ router.put("/approve/:goalId", authMiddleware, requireRole("manager"), async (re
         new_value: "Approved",
     });
 
-    res.json({
-      message: "Goal Approved",
-    });
+    // Notify the goal owner and manager channel
+    try {
+      const owner = await pool.query(`SELECT email FROM users WHERE id=$1`, [oldGoal.rows[0].employee_id]);
+      const ownerEmail = owner.rows[0]?.email;
+      const link = buildGoalDeepLink(req.params.goalId, 'manager');
+      if (ownerEmail) {
+        sendEmail({
+          to: ownerEmail,
+          subject: `Your goal was approved`,
+          text: `Your goal '${oldGoal.rows[0].title}' was approved by ${req.user.email}. View: ${link}`,
+          html: `<p>Your goal '<strong>${oldGoal.rows[0].title}</strong>' was approved by ${req.user.email}.</p><p><a href="${link}">Open</a></p>`,
+        }).catch(console.error);
+      }
+
+      // Teams support removed; skip Teams notification.
+    } catch (err) {
+      console.error('Approval notification failed', err);
+    }
+
+    res.json({ message: 'Goal Approved' });
 
   } catch (error) {
 
@@ -380,9 +417,27 @@ router.put("/reject/:goalId", authMiddleware, requireRole("manager"), async (req
       [req.params.goalId]
     );
 
-    res.json({
-      message: "Goal Returned",
-    });
+    // notify owner
+    try {
+      const g = await pool.query(`SELECT * FROM goals WHERE id=$1`, [req.params.goalId]);
+      const owner = await pool.query(`SELECT email FROM users WHERE id=$1`, [g.rows[0].employee_id]);
+      const ownerEmail = owner.rows[0]?.email;
+      const link = buildGoalDeepLink(req.params.goalId, 'manager');
+      if (ownerEmail) {
+        sendEmail({
+          to: ownerEmail,
+          subject: `Your goal was returned`,
+          text: `Your goal '${g.rows[0].title}' was returned by ${req.user.email}. Please update and resubmit: ${link}`,
+          html: `<p>Your goal '<strong>${g.rows[0].title}</strong>' was returned by ${req.user.email}.</p><p><a href="${link}">Open</a></p>`,
+        }).catch(console.error);
+      }
+
+      // Teams support removed; skip Teams notification.
+    } catch (err) {
+      console.error('Return notification failed', err);
+    }
+
+    res.json({ message: 'Goal Returned' });
 
   } catch (error) {
 
@@ -1474,6 +1529,62 @@ router.get(
 
   }
 );
+
+// Basic analytics summary (quick win)
+router.get("/analytics/summary", authMiddleware, async (req, res) => {
+  try {
+    const totals = await pool.query(
+      `SELECT u.id AS employee_id, u.email, COUNT(g.*) AS total_goals, COALESCE(ROUND(AVG(g.progress_score)::numeric,0),0) AS avg_score FROM users u LEFT JOIN goals g ON g.employee_id = u.id GROUP BY u.id,u.email ORDER BY u.email LIMIT 200`
+    );
+
+    const byThrust = await pool.query(
+      `SELECT thrust_area, COUNT(*) AS count FROM goals GROUP BY thrust_area ORDER BY count DESC LIMIT 50`
+    );
+
+    res.json({ totals: totals.rows, byThrust: byThrust.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// Notification config endpoints (admin)
+router.get('/config/notifications', authMiddleware, requireRole('admin'), async (req, res) => {
+  try {
+    const cfg = readConfig();
+    res.json(cfg || {});
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+router.put('/config/notifications', authMiddleware, requireRole('admin'), async (req, res) => {
+  try {
+    const body = req.body || {};
+    writeConfig(body);
+    res.json({ message: 'Saved' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+router.post('/config/notifications/test', authMiddleware, requireRole('admin'), async (req, res) => {
+  try {
+    const cfg = readConfig();
+    const { testEmail } = req.body || {};
+
+    if (testEmail) {
+      await sendEmail({ to: testEmail, subject: 'Test notification', text: 'This is a test email from Goal Tracker', html: '<p>Test email</p>' });
+    }
+
+    res.json({ message: 'Test email sent (if configured)' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
 router.put(
   "/manager/update/:goalId",
   authMiddleware,

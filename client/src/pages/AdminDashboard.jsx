@@ -11,6 +11,10 @@ export default function AdminDashboard() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [error, setError] = useState("");
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncStats, setSyncStats] = useState(null);
+  const [syncError, setSyncError] = useState("");
+  const [lastSyncAt, setLastSyncAt] = useState("");
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId") || "1";
 
@@ -95,6 +99,29 @@ export default function AdminDashboard() {
             <div className="flex flex-wrap gap-2">
               <button onClick={() => navigate("/audit-logs")} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Audit Logs</button>
               <button onClick={() => navigate("/analytics")} className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700">Analytics</button>
+              <button onClick={() => navigate("/admin/notifications")} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Notifications</button>
+              <button
+                onClick={async () => {
+                  setSyncError("");
+                  setSyncStats(null);
+                  if (!window.confirm('Run full Azure AD tenant sync now? This may take several minutes.')) return;
+                  try {
+                    setSyncLoading(true);
+                    const res = await axios.post("http://localhost:5000/api/admin/azure/sync", null, { headers: authHeaders });
+                    setSyncStats(res.data.stats || res.data);
+                    setLastSyncAt(new Date().toLocaleString());
+                  } catch (err) {
+                    console.error(err);
+                    setSyncError(err.response?.data?.message || err.message || 'Sync failed');
+                  } finally {
+                    setSyncLoading(false);
+                  }
+                }}
+                disabled={syncLoading}
+                className="rounded-lg bg-yellow-600 px-4 py-2 text-sm font-semibold text-white hover:bg-yellow-700 disabled:opacity-60"
+              >
+                {syncLoading ? 'Running Sync…' : 'Run Azure Sync'}
+              </button>
               <button onClick={() => window.open("http://localhost:5000/api/goals/export/excel")} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
                 Export Excel
               </button>
@@ -103,6 +130,46 @@ export default function AdminDashboard() {
         </div>
 
         {error && <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-black text-slate-900">Azure Sync Status</h2>
+              <p className="text-sm text-slate-600">Track the latest tenant-wide sync from Microsoft Entra.</p>
+            </div>
+            {lastSyncAt && <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">Last run: {lastSyncAt}</span>}
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</p>
+              <p className={`mt-1 text-lg font-bold ${syncError ? 'text-rose-600' : syncStats ? 'text-emerald-600' : 'text-slate-900'}`}>
+                {syncLoading ? 'Running' : syncError ? 'Failed' : syncStats ? 'Success' : 'Idle'}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total</p>
+              <p className="mt-1 text-lg font-bold text-slate-900">{syncStats?.total ?? '-'}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Created / Updated</p>
+              <p className="mt-1 text-lg font-bold text-slate-900">
+                {syncStats ? `${syncStats.created ?? 0} / ${syncStats.updated ?? 0}` : '-'}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Errors</p>
+              <p className="mt-1 text-lg font-bold text-slate-900">{syncStats?.errors ?? '-'}</p>
+            </div>
+          </div>
+
+          {syncError && <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{syncError}</div>}
+          {syncStats && !syncError && (
+            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              Azure sync finished successfully.
+            </div>
+          )}
+        </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-xl font-black text-slate-900">Cycle Management</h2>

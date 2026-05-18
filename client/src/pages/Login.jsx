@@ -2,6 +2,8 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 export default function Login() {
 
   const navigate = useNavigate();
@@ -16,7 +18,7 @@ export default function Login() {
       setError("");
 
       const res = await axios.post(
-        "http://localhost:5000/api/auth/login",
+        `${API_BASE}/api/auth/login`,
         {
           email,
           password,
@@ -58,6 +60,10 @@ export default function Login() {
 
   };
 
+  const handleAzureLogin = () => {
+    window.location.href = `${API_BASE}/auth/azure/login`;
+  };
+
   return (
 
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-cyan-50 to-indigo-100 px-4">
@@ -92,6 +98,19 @@ export default function Login() {
           className="w-full rounded-xl bg-slate-900 p-3 font-semibold text-white transition hover:bg-slate-800"
         >
           Login
+        </button>
+
+        <div className="my-4 flex items-center gap-3 text-xs text-slate-500">
+          <div className="h-px flex-1 bg-slate-200"></div>
+          <span>or</span>
+          <div className="h-px flex-1 bg-slate-200"></div>
+        </div>
+
+        <button
+          onClick={handleAzureLogin}
+          className="w-full rounded-xl border border-slate-300 bg-white p-3 font-semibold text-slate-900 transition hover:bg-slate-50"
+        >
+          Sign in with Microsoft
         </button>
 
       </div>

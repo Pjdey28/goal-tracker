@@ -1,3 +1,5 @@
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import ManagerDetail from './pages/ManagerDetail';
 import { Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -7,6 +9,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CreateGoal from "./pages/CreateGoal";
 import AuditLogs from "./pages/AuditLogs";
 import Analytics from "./pages/Analytics";
+import NotificationSettings from "./pages/NotificationSettings";
+import EscalationDashboard from "./pages/EscalationDashboard";
 import SharedGoals from "./pages/SharedGoals";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CompletionDashboard from "./pages/CompletionDashboard";
@@ -73,6 +77,40 @@ export default function App() {
           element={
             <ProtectedRoute allowedRole="admin">
               <Analytics />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/notifications"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <NotificationSettings />
+            </ProtectedRoute>
+          }
+        />
+          <Route
+            path="/admin/analytics"
+            element={
+              <ProtectedRoute allowedRole="admin">
+                <AnalyticsDashboard />
+              </ProtectedRoute>
+            }
+          />
+        <Route
+          path="/admin/analytics/manager/:id"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <ManagerDetail />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/escalations"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <EscalationDashboard />
             </ProtectedRoute>
           }
         />

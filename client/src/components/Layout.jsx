@@ -103,6 +103,12 @@ export default function Layout({ children }) {
                 Audit Logs
               </Link>
               <Link
+                to="/admin/escalations"
+                className="rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800"
+              >
+                Escalations
+              </Link>
+              <Link
                 to="/completion-dashboard"
                 className="rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800"
                 >
