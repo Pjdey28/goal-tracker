@@ -12,7 +12,7 @@ export default function Analytics() {
 
   const fetchGoals = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/goals/employee/${userId}`);
+      const res = await axios.get(`/api/goals/employee/${userId}`);
       setGoals(res.data || []);
     } catch (err) {
       console.log(err);

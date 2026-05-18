@@ -23,7 +23,7 @@ export default function AdminDashboard() {
 
   const fetchGoals = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/goals/employee/${userId}`);
+      const res = await axios.get(`/api/goals/employee/${userId}`);
       setGoals(res.data || []);
     } catch (err) {
       console.log(err);
@@ -33,7 +33,7 @@ export default function AdminDashboard() {
 
   const fetchCycles = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/cycles", { headers: authHeaders });
+      const res = await axios.get("/api/cycles", { headers: authHeaders });
       setCycles(res.data || []);
     } catch (err) {
       console.log(err);
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
     try {
       setError("");
       await axios.post(
-        "http://localhost:5000/api/cycles",
+        "/api/cycles",
         { cycle_name: cycleName, start_date: startDate, end_date: endDate },
         { headers: authHeaders }
       );
@@ -68,7 +68,7 @@ export default function AdminDashboard() {
     if (!window.confirm("Delete this cycle?")) return;
     try {
       setError("");
-      await axios.delete(`http://localhost:5000/api/cycles/${id}`, { headers: authHeaders });
+      await axios.delete(`/api/cycles/${id}`, { headers: authHeaders });
       fetchCycles();
     } catch (err) {
       console.log(err);
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
   const unlockGoal = async (id) => {
     try {
       setError("");
-      await axios.put(`http://localhost:5000/api/goals/unlock/${id}`);
+      await axios.put(`/api/goals/unlock/${id}`);
       fetchGoals();
     } catch (err) {
       console.log(err);
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
                   if (!window.confirm('Run full Azure AD tenant sync now? This may take several minutes.')) return;
                   try {
                     setSyncLoading(true);
-                    const res = await axios.post("http://localhost:5000/api/admin/azure/sync", null, { headers: authHeaders });
+                    const res = await axios.post("/api/admin/azure/sync", null, { headers: authHeaders });
                     setSyncStats(res.data.stats || res.data);
                     setLastSyncAt(new Date().toLocaleString());
                   } catch (err) {
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
               >
                 {syncLoading ? 'Running Sync…' : 'Run Azure Sync'}
               </button>
-              <button onClick={() => window.open("http://localhost:5000/api/goals/export/excel")} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+              <button onClick={() => window.open("/api/goals/export/excel")} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
                 Export Excel
               </button>
             </div>

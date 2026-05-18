@@ -12,7 +12,7 @@ export default function ManagerDashboard() {
   const [savingId, setSavingId] = useState(null);
   const [drafts, setDrafts] = useState({});
 
-  const API = "http://localhost:5000/api/goals";
+  const API = "/api/goals";
 
   const formatDate = (value) => {
     if (!value) return "Not set";

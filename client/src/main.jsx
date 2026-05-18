@@ -27,6 +27,7 @@ try {
   // ignore
 }
 
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || "";
 axios.defaults.headers.common["Authorization"] = localStorage.getItem("token");
 const storedTheme = window.localStorage.getItem('theme')
 const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches

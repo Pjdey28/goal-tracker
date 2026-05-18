@@ -9,7 +9,7 @@ export default function CompletionDashboard() {
   const fetchDashboard = async () => {
     try {
       setError("");
-      const res = await axios.get("http://localhost:5000/api/goals/completion/dashboard");
+      const res = await axios.get("/api/goals/completion/dashboard");
       setEmployees(res.data || []);
     } catch (err) {
       console.log(err);

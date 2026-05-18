@@ -10,7 +10,7 @@ export default function ManagerCheckins() {
   const fetchCheckins = async () => {
     try {
       setError("");
-      const res = await axios.get("http://localhost:5000/api/goals/manager/checkins");
+      const res = await axios.get("/api/goals/manager/checkins");
       const rows = res.data || [];
       setCheckins(rows);
       const initial = {};
@@ -31,7 +31,7 @@ export default function ManagerCheckins() {
   const addComment = async (id) => {
     try {
       setError("");
-      await axios.put(`http://localhost:5000/api/goals/manager/comment/${id}`, {
+      await axios.put(`/api/goals/manager/comment/${id}`, {
         manager_comment: comments[id] || "",
       });
       fetchCheckins();

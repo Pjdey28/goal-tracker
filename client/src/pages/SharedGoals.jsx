@@ -11,7 +11,7 @@ export default function SharedGoals() {
   const fetchGoals = async () => {
     try {
       setError("");
-      const res = await axios.get(`http://localhost:5000/api/goals/shared/${employeeId}`);
+      const res = await axios.get(`/api/goals/shared/${employeeId}`);
       const rows = res.data || [];
       setGoals(rows);
       const initial = {};
@@ -57,7 +57,7 @@ export default function SharedGoals() {
 
     try {
       setError("");
-      await axios.put(`http://localhost:5000/api/goals/shared/assign/${assignmentId}`, payload);
+      await axios.put(`/api/goals/shared/assign/${assignmentId}`, payload);
       fetchGoals();
     } catch (err) {
       console.log(err);

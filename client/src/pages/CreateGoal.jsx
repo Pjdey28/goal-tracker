@@ -17,7 +17,7 @@ export default function CreateGoal() {
   const handleSubmit = async () => {
     try {
       setError("");
-      await axios.post("http://localhost:5000/api/goals/create", {
+      await axios.post("/api/goals/create", {
         employee_id: Number(employeeId),
         title,
         description,

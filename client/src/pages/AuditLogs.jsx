@@ -9,7 +9,7 @@ export default function AuditLogs() {
   const fetchLogs = async () => {
     try {
       setError("");
-      const res = await axios.get("http://localhost:5000/api/goals/audit/logs");
+      const res = await axios.get("/api/goals/audit/logs");
       setLogs(res.data || []);
     } catch (err) {
       console.log(err);

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/goals";
+const API = "/api/goals";
 
 export default function SharedGoalManager() {
   const [sharedGoals, setSharedGoals] = useState([]);

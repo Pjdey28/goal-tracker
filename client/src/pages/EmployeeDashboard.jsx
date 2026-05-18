@@ -13,7 +13,7 @@ export default function EmployeeDashboard() {
   const fetchGoals = async () => {
     try {
       setError("");
-      const res = await axios.get(`http://localhost:5000/api/goals/employee/${employeeId}`);
+      const res = await axios.get(`/api/goals/employee/${employeeId}`);
       const rows = res.data || [];
       setGoals(rows);
       const initial = {};
@@ -38,7 +38,7 @@ export default function EmployeeDashboard() {
     try {
       setError("");
       const draft = drafts[id] || {};
-      await axios.post(`http://localhost:5000/api/goals/checkin/${id}`, {
+      await axios.post(`/api/goals/checkin/${id}`, {
         achievement_value: draft.achievement,
         progress_status: draft.status,
       });
@@ -52,7 +52,7 @@ export default function EmployeeDashboard() {
   const submitGoals = async () => {
     try {
       setError("");
-      await axios.put(`http://localhost:5000/api/goals/submit/${employeeId}`);
+      await axios.put(`/api/goals/submit/${employeeId}`);
       fetchGoals();
     } catch (err) {
       console.log(err);
