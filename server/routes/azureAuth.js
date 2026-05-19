@@ -76,14 +76,16 @@ router.get('/callback', async (req, res) => {
       console.warn('Failed to set auth cookie', e?.message || e);
     }
 
-    const redirectUrl = `${CLIENT_URL}/?token=${token}`;
+    const redirectBase = (CLIENT_URL || 'http://localhost:5177').replace(/\/+$/, '');
+    const redirectUrl = `${redirectBase}/?token=${token}`;
     console.log('Azure callback successful, redirecting to', redirectUrl);
     res.redirect(redirectUrl);
   } catch (err) {
     console.error('Azure callback error', err?.response?.data || err.message || err);
     // redirect back to client with an error query so the frontend can show a message
+    const redirectBase = (CLIENT_URL || 'http://localhost:5177').replace(/\/+$/, '');
     const errMsg = encodeURIComponent((err?.response?.data && JSON.stringify(err.response.data)) || err.message || 'Authentication failed');
-    res.redirect(`${CLIENT_URL}/?auth_error=${errMsg}`);
+    res.redirect(`${redirectBase}/?auth_error=${errMsg}`);
   }
 });
 
