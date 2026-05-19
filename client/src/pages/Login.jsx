@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -13,7 +13,7 @@ export default function Login() {
   const [error, setError] = useState("");
 
   // show auth error redirected from server (e.g., ?auth_error=...)
-  useState(() => {
+  useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const authErr = params.get('auth_error');
@@ -25,22 +25,22 @@ export default function Login() {
     } catch (e) {
       // ignore
     }
-  });
+  }, []);
 
   // If token already present (SSO just set it), redirect based on role
-  useState(() => {
+  useEffect(() => {
     try {
       const t = localStorage.getItem('token');
       const r = localStorage.getItem('role');
       if (t && r) {
-        if (r === 'employee') navigate('/employee');
-        if (r === 'manager') navigate('/manager');
-        if (r === 'admin') navigate('/admin');
+        if (r === 'employee') return navigate('/employee');
+        if (r === 'manager') return navigate('/manager');
+        if (r === 'admin') return navigate('/admin');
       }
     } catch (e) {
       // ignore
     }
-  });
+  }, [navigate]);
 
   const handleLogin = async () => {
 
