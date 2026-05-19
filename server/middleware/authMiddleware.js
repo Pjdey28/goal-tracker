@@ -4,6 +4,15 @@ const authMiddleware = (req, res, next) => {
 
   try {
 
+    // Allow cron jobs to authenticate via CRON_SECRET header or query param
+    const cronSecret = process.env.CRON_SECRET;
+    const headerSecret = req.headers['x-cron-secret'];
+    const querySecret = req.query.cron_secret;
+    if (cronSecret && (headerSecret === cronSecret || querySecret === cronSecret)) {
+      req.user = { id: null, role: 'admin', cron: true };
+      return next();
+    }
+
     let token = req.header("Authorization");
 
     if (!token) {

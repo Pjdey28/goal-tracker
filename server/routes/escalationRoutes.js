@@ -11,6 +11,7 @@ const {
 } = require('../utils/escalationService');
 
 const router = express.Router();
+const cronAuth = require('../utils/cronAuth');
 
 router.get('/escalations/rules', authMiddleware, requireRole(['admin']), async (req, res) => {
   try {
@@ -43,7 +44,7 @@ router.get('/escalations/logs', authMiddleware, requireRole(['admin']), async (r
   }
 });
 
-router.post('/escalations/run', authMiddleware, requireRole(['admin']), async (req, res) => {
+router.post('/escalations/run', cronAuth, authMiddleware, requireRole(['admin']), async (req, res) => {
   try {
     const result = await runEscalationSweep();
     res.json(result);
@@ -63,7 +64,7 @@ router.patch('/escalations/logs/:id/resolve', authMiddleware, requireRole(['admi
   }
 });
 
-router.post('/escalations/bootstrap', async (req, res) => {
+router.post('/escalations/bootstrap', cronAuth, async (req, res) => {
   try {
     await ensureEscalationSchema();
     res.json({ message: 'Escalation schema ready' });

@@ -1,6 +1,7 @@
 const express = require('express');
 const authMiddleware = require('../middleware/authMiddleware');
 const requireRole = require('../middleware/roleMiddleware');
+const cronAuth = require('../utils/cronAuth');
 const router = express.Router();
 const {
   qoqTrend,
@@ -54,7 +55,7 @@ router.get('/analytics/managers', authMiddleware, requireRole(['admin']), async 
   }
 });
 
-router.post('/analytics/refresh', authMiddleware, requireRole(['admin']), async (req, res) => {
+router.post('/analytics/refresh', cronAuth, authMiddleware, requireRole(['admin']), async (req, res) => {
   try {
     await ensureAnalyticsMaterializedViews();
     res.json({ message: 'Materialized views ensured/created' });

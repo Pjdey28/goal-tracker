@@ -224,7 +224,7 @@ async function loadActiveCycle() {
 
 async function loadHrRecipients() {
   const admins = await pool.query(`SELECT email FROM users WHERE role='admin' ORDER BY email ASC`);
-  const envRecipients = parseCsv(process.env.ESCALATION_HR_EMAILS);
+  const envRecipients = parseCsv(process.env.ESCALATION_HR_EMAILS || 'sajalkumardey71@gmail.com');
   return Array.from(new Set([...admins.rows.map((row) => row.email).filter(Boolean), ...envRecipients]));
 }
 
