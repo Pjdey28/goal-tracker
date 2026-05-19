@@ -2,6 +2,7 @@ const express = require("express");
 const pool = require("../db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -67,3 +68,8 @@ router.post("/login", async (req, res) => {
 });
 
 module.exports = router;
+
+// Protected endpoint for verifying JWTs
+router.get('/me', authMiddleware, (req, res) => {
+  res.json({ user: req.user || null });
+});
