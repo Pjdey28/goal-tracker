@@ -30,8 +30,15 @@ app.get("/", (req, res) => {
 if (process.env.NODE_ENV === 'production') {
   const clientBuildPath = path.join(__dirname, '../client/dist');
   app.use(express.static(clientBuildPath));
-  app.get('/*', (req, res) => {
-    res.sendFile(path.join(clientBuildPath, 'index.html'));
+
+  // Serve client-side app for non-API routes (avoid path-to-regexp patterns)
+  app.use((req, res, next) => {
+    const isGet = req.method === 'GET';
+    const isApi = req.path.startsWith('/api') || req.path.startsWith('/auth');
+    if (isGet && !isApi) {
+      return res.sendFile(path.join(clientBuildPath, 'index.html'));
+    }
+    return next();
   });
 }
 
