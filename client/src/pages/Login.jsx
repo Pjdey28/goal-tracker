@@ -27,6 +27,21 @@ export default function Login() {
     }
   });
 
+  // If token already present (SSO just set it), redirect based on role
+  useState(() => {
+    try {
+      const t = localStorage.getItem('token');
+      const r = localStorage.getItem('role');
+      if (t && r) {
+        if (r === 'employee') navigate('/employee');
+        if (r === 'manager') navigate('/manager');
+        if (r === 'admin') navigate('/admin');
+      }
+    } catch (e) {
+      // ignore
+    }
+  });
+
   const handleLogin = async () => {
 
     try {
