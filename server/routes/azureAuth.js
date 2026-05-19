@@ -58,6 +58,24 @@ router.get('/callback', async (req, res) => {
     const token = jwt.sign({ id: user.id, role: user.role, email: user.email }, process.env.JWT_SECRET || 'secretkey', { expiresIn: '8h' });
 
     // redirect back to client with token
+    // Attempt to set a cookie for the server domain so browsers can store the token.
+    // Note: cookies for login.microsoftonline.com cannot be modified by us.
+    const clientIsHttps = CLIENT_URL && CLIENT_URL.startsWith('https');
+    const cookieOptions = {
+      httpOnly: true,
+      secure: clientIsHttps, // Secure must be true for SameSite=None
+      maxAge: 8 * 60 * 60 * 1000, // 8 hours
+      sameSite: clientIsHttps ? 'None' : 'Lax',
+      path: '/',
+    };
+
+    try {
+      res.cookie('auth_token', token, cookieOptions);
+      console.log('Set auth_token cookie with options', cookieOptions);
+    } catch (e) {
+      console.warn('Failed to set auth cookie', e?.message || e);
+    }
+
     const redirectUrl = `${CLIENT_URL}/?token=${token}`;
     console.log('Azure callback successful, redirecting to', redirectUrl);
     res.redirect(redirectUrl);
