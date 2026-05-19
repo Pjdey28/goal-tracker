@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "postinstall": "npm --prefix ../client install && npm --prefix ../client run build"
+    "postinstall": "[ -d ../client ] && command -v npm >/dev/null 2>&1 && npm --prefix ../client install && npm --prefix ../client run build || echo 'Skipping client build'"
   },
   "keywords": [],
   "author": "",
