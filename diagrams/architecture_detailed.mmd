@@ -1,0 +1,71 @@
+flowchart TD
+  subgraph ClientSide
+    Browser[Browser / User]
+    CDN[Vercel CDN]
+  end
+
+  subgraph Frontend
+    Vercel[Vercel - React (Vite) SPA]
+  end
+
+  subgraph Edge
+    LB[Global Load Balancer / CDN]
+  end
+
+  subgraph Backend
+    API[Render - Node/Express API]
+    Auth[Azure AD (OIDC) / Microsoft Graph]
+    Scheduler[GitHub Actions / Render Cron]
+    Workers[Optional Background Workers]
+  end
+
+  subgraph Data
+    Postgres[(Postgres DB)]
+    MatViews[(Materialized Views)]
+    Audit[Audit & Escalation Logs]
+    FileStore[(Optional File Storage)]
+  end
+
+  subgraph Integrations
+    SendGrid[SendGrid / SMTP]
+    Monitoring[Monitoring / Logs]
+    Secrets[Secrets Store (Render/Vercel/GitHub)]
+  end
+
+  %% Client to frontend
+  Browser -->|HTTP(S) GET, SPA| CDN --> Vercel
+  Vercel -->|API requests| LB
+
+  %% Edge to API
+  LB -->|HTTPS| API
+
+  %% API components
+  API -->|JWT / session| Postgres
+  API -->|read-heavy analytics| MatViews
+  API -->|write events| Audit
+  API -->|uploads| FileStore
+  API -->|email send| SendGrid
+  API -->|auth redirect & token exchange| Auth
+
+  %% Scheduler
+  Scheduler -->|POST /api/admin/escalations/run| API
+  Scheduler -->|POST /api/admin/analytics/refresh| API
+
+  %% Workers
+  Scheduler --> Workers
+  Workers --> API
+  Workers --> Postgres
+
+  %% Data relationships
+  MatViews -->|refresh based on base tables| Postgres
+  Audit --> Postgres
+
+  %% Observability & secrets
+  API --> Monitoring
+  SendGrid --> Monitoring
+  Postgres --> Monitoring
+  API --> Secrets
+  Vercel --> Secrets
+
+  classDef infra fill:#f8fafc,stroke:#0f172a,stroke-width:1px;
+  class LB,API,Postgres,MatViews,Audit,SendGrid,Auth,Scheduler,Workers,Secrets,Monitoring infra;
