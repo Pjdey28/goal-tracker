@@ -31,7 +31,9 @@ router.get('/callback', async (req, res) => {
     if (!code) return res.status(400).send('Missing code');
 
     const tokenData = await exchangeCodeForToken(code);
+    console.log('Azure tokenData:', Object.keys(tokenData));
     const decoded = jwt.decode(tokenData.id_token);
+    console.log('Decoded id_token:', decoded && { oid: decoded.oid, upn: decoded.upn, email: decoded.preferred_username });
     const email = resolveEmail({ decoded });
 
     let graphProfile = null;
@@ -56,10 +58,14 @@ router.get('/callback', async (req, res) => {
     const token = jwt.sign({ id: user.id, role: user.role, email: user.email }, process.env.JWT_SECRET || 'secretkey', { expiresIn: '8h' });
 
     // redirect back to client with token
-    res.redirect(`${CLIENT_URL}/?token=${token}`);
+    const redirectUrl = `${CLIENT_URL}/?token=${token}`;
+    console.log('Azure callback successful, redirecting to', redirectUrl);
+    res.redirect(redirectUrl);
   } catch (err) {
     console.error('Azure callback error', err?.response?.data || err.message || err);
-    res.status(500).send('Authentication failed');
+    // redirect back to client with an error query so the frontend can show a message
+    const errMsg = encodeURIComponent((err?.response?.data && JSON.stringify(err.response.data)) || err.message || 'Authentication failed');
+    res.redirect(`${CLIENT_URL}/?auth_error=${errMsg}`);
   }
 });
 

@@ -12,6 +12,21 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // show auth error redirected from server (e.g., ?auth_error=...)
+  useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const authErr = params.get('auth_error');
+      if (authErr) {
+        setError(decodeURIComponent(authErr));
+        const url = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, url);
+      }
+    } catch (e) {
+      // ignore
+    }
+  });
+
   const handleLogin = async () => {
 
     try {
