@@ -11,6 +11,8 @@ try {
   const t = params.get('token');
   if (t) {
     localStorage.setItem('token', t);
+    // mark that this tab/window just received an SSO token so login can redirect once
+    try { sessionStorage.setItem('sso_just_logged_in', '1'); } catch (e) {}
     try {
       const payload = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
       if (payload?.id) localStorage.setItem('userId', String(payload.id));

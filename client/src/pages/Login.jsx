@@ -30,9 +30,14 @@ export default function Login() {
   // If token already present (SSO just set it), redirect based on role
   useEffect(() => {
     try {
+      // Only auto-redirect when this tab/window just received an SSO token.
+      // Prevents opening a new tab from immediately sending users to dashboard
+      // when a valid token exists in localStorage from another session.
+      const justSso = sessionStorage.getItem('sso_just_logged_in');
       const t = localStorage.getItem('token');
       const r = localStorage.getItem('role');
-      if (t && r) {
+      if (justSso && t && r) {
+        sessionStorage.removeItem('sso_just_logged_in');
         if (r === 'employee') return navigate('/employee');
         if (r === 'manager') return navigate('/manager');
         if (r === 'admin') return navigate('/admin');
