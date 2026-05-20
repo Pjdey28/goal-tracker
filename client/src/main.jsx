@@ -25,6 +25,25 @@ try {
     const url = window.location.origin + window.location.pathname;
     window.history.replaceState({}, document.title, url);
   }
+  // If no token was in the URL but a token exists in localStorage (refresh/new tab),
+  // ensure role and user fields are populated so ProtectedRoute won't redirect.
+  try {
+    const existing = localStorage.getItem('token');
+    if (!params?.get || !params.get('token')) {
+      if (existing) {
+        try {
+          const payload = JSON.parse(atob(existing.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+          if (payload?.id && !localStorage.getItem('userId')) localStorage.setItem('userId', String(payload.id));
+          if (payload?.role && !localStorage.getItem('role')) localStorage.setItem('role', payload.role);
+          if (payload?.email && !localStorage.getItem('email')) localStorage.setItem('email', payload.email);
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
 } catch (e) {
   // ignore
 }

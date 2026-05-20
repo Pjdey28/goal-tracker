@@ -2,6 +2,11 @@
 
 Comprehensive README describing important features, architecture, deployment, configuration, and operational procedures for this repository.
 
+Microsoft SSO details (email - password)
+1) Admin - admin@goaltrack123.onmicrosoft.com - Pranjal1234
+2) Manager - manager@goaltrack123.onmicrosoft.com - Pranjal1234
+3) Employee - employee@goaltrack123.onmicrosoft.com - Pranjal1234
+
 ---
 
 ## 1) Project Overview
