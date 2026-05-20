@@ -1,6 +1,6 @@
 # Goal Tracker
 
-Comprehensive README describing important features, architecture, deployment, configuration, and operational procedures for this repository.
+Full-stack goal-tracking web app with role-based dashboards (employee/manager/admin), Azure AD SSO, email notifications, and a Node/Express + React (Vite) frontend backed by Postgres for managing goals, check-ins, and analytics.
 
 **Microsoft SSO details (email - password)**
 1) Admin - admin@goaltrack123.onmicrosoft.com - Pranjal1234
